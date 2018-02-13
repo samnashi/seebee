@@ -74,7 +74,7 @@ for nE in nEpoch:
             if nLayer == 1 and bidir == False:
                 filenameResult = dT + '_e' + str(nE) + '_' + rT + str(nLayer) + 'Result.mat'
             if nLayer == 2 and bidir == True:
-                filenameResult = dT + '_e' + str(nE) + '_bi_l1l2k_' + rT + str(nLayer) + 'Result.mat'
+                filenameResult = dT + '_e' + str(nE) + '_bi_tanh_200u_l1l2r' + rT + str(nLayer) + 'Result.mat'
             else:
                 filenameResult = dT + '_e' + str(nE) + '_' + rT + str(nLayer) + 'Result.mat'
             print("filename_result: {}".format(filenameResult))
@@ -144,11 +144,11 @@ for nE in nEpoch:
                              activity_regularizer=None)(x1)
                 if nLayer == 2 and bidir == True:
                     print 'L2LSTM'
-                    x1 = Bidirectional(LSTM(units=64, return_sequences=True, activation='sigmoid',
-                                            recurrent_activation='hard_sigmoid', name='LSTM_0',kernel_regularizer=regzr,
-                                            recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None))(rnn_input)
-                    x = Bidirectional(LSTM(units=64, activation='sigmoid', recurrent_activation='hard_sigmoid',name='LSTM_1',
-                                           kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,
+                    x1 = Bidirectional(LSTM(units=128, return_sequences=True, activation='tanh',
+                                            recurrent_activation='hard_sigmoid', name='LSTM_0',kernel_regularizer=None,
+                                            recurrent_regularizer=regzr,bias_regularizer=None,activity_regularizer=None))(rnn_input)
+                    x = Bidirectional(LSTM(units=128, activation='tanh', recurrent_activation='hard_sigmoid',name='LSTM_1',
+                                           kernel_regularizer=None, recurrent_regularizer=regzr,bias_regularizer=None,
                                            activity_regularizer=None))(x1)
             final_layer = Dense(numClasses,activation='softmax')(x)
             model = Model(inputs=rnn_input,outputs=final_layer)

@@ -14,6 +14,9 @@ import scipy.io as sio
 import time
 import numpy as np
 
+'''Specify the running parameters first (# of layers (1 or 2), LSTM or GRU, and bidirectional or not). You can also 
+specify the data to run through. '''
+
 def parse_corpus(fileName):
     input = open(fileName, "r")
     labels = []
@@ -64,8 +67,8 @@ dataType = ['DATA_IMG', 'DATA_SKL', 'DATA_ALL']
 rnnType = ['LSTM']
 regzr = l1_l2()
 
-for nE in nEpoch:
-    for dT in dataType:
+for nE in nEpoch: # of epochs. was a carryover from the ANOVA days.
+    for dT in dataType: #(dasar, akhiran and awalan) x (skeleton, image, all)
         for rT in rnnType:
             fL = TrainPath + dT + 'DataTrain.txt'
             fT = TestPath + dT + 'DataTest.txt'
@@ -79,8 +82,8 @@ for nE in nEpoch:
                 filenameResult = dT + '_e' + str(nE) + '_' + rT + str(nLayer) + 'Result.mat'
             print("filename_result: {}".format(filenameResult))
 
-            print('fL: ', fL)
-            print('fT: ', fT)
+            print('fL: ', fL) #which training set is being loaded.
+            print('fT: ', fT) #which testing set is being loaded
 
             (X_train, Y_train) = parse_corpus(fileName=fL)
             (X_test, Y_test) = parse_corpus(fileName=fT)
@@ -104,15 +107,15 @@ for nE in nEpoch:
             #don't use shape=X_train.shape. Keras pads the input dim if you have return_sequences=True.
             rnn_input = Input(shape=(numTimestep, numFeatures))
 
-            # satu layer
-            # model.add(LSTM(output_dim=64, input_dim=numFeatures, activation='sigmoid', inner_activation='hard_sigmoid'))
 
             if rT == 'GRU':
-                if nLayer == 1:
+                if nLayer == 1 and bidir == True:
                     print 'L1biGRU'
                     x = Bidirectional(GRU(units=128, activation='sigmoid',recurrent_activation='hard_sigmoid',
                                           kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None))(rnn_input)
-
+                if nLayer == 1 and bidir == False:
+                    x = GRU(units=128, activation='sigmoid',recurrent_activation='hard_sigmoid',
+                                          kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None)(rnn_input)
                     # kalau mau dua layer GRU
                 if nLayer == 2 and bidir == False:
                     print 'L2GRU' #either way the final layer coming out of the rnn block is called 'x'
@@ -128,10 +131,14 @@ for nE in nEpoch:
                                           kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None))(x1)
 
             if rT == 'LSTM':
-                if nLayer == 1:
+                if nLayer == 1 and bidir == True:
                     print 'L1biLSTM'
                     x = Bidirectional(LSTM(units=64, activation='sigmoid',recurrent_activation='hard_sigmoid',
                                            kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None))(rnn_input)
+                if nLayer == 1 and bidir == False:
+                    print 'L1LSTM'
+                    x = LSTM(units=64, activation='sigmoid',recurrent_activation='hard_sigmoid',
+                                           kernel_regularizer=regzr, recurrent_regularizer=None,bias_regularizer=None,activity_regularizer=None)(rnn_input)
 
                     # kalau mau dua layer LSTM
                 if nLayer == 2 and bidir == False:
@@ -153,7 +160,9 @@ for nE in nEpoch:
             final_layer = Dense(numClasses,activation='softmax')(x)
             model = Model(inputs=rnn_input,outputs=final_layer)
 
-            model.compile(loss='categorical_crossentropy', optimizer='rmsprop',metrics=['categorical_accuracy','cosine']) #kld doesn't work 2.0.6
+            #change the metrics if need be, since accuracy alone is a bit passe. 
+            model.compile(loss='categorical_crossentropy', optimizer='rmsprop',metrics=['categorical_accuracy','cosine'])
+            #kld doesn't work 2.0.6
 
             #4000 epoch, silakan diganti-ganti
 
